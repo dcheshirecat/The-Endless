@@ -9,30 +9,40 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
+      # 1️⃣ Checkout repo
       - uses: actions/checkout@v4
 
-      # Download Godot binary
+      # 2️⃣ Download Godot Linux binary
       - name: Download Godot
         run: |
           wget -4 https://github.com/godotengine/godot/releases/download/4.2.1-stable/Godot_v4.2.1-stable_linux.x86_64.zip -O Godot.zip
           unzip -q Godot.zip
           chmod +x Godot_v4.2.1-stable_linux.x86_64
 
-      # Download export templates from GitHub
+      # 3️⃣ Download export templates
       - name: Install Export Templates
         run: |
           wget -4 https://github.com/godotengine/godot/releases/download/4.2.1-stable/Godot_v4.2.1-stable_export_templates.tpz -O templates.tpz
           mkdir -p ~/.local/share/godot/export_templates/4.2.1.stable
           unzip -q templates.tpz -d ~/.local/share/godot/export_templates/4.2.1.stable
 
-      # Export APK
+      # 4️⃣ Create temporary Android debug keystore
+      - name: Create Android Debug Keystore
+        run: |
+          keytool -genkeypair -v -keystore debug.keystore -storepass android \
+                  -alias androiddebugkey -keypass android -keyalg RSA -keysize 2048 \
+                  -validity 10000 -dname "CN=Godot, OU=Godot, O=Godot, L=Earth, S=Earth, C=US"
+
+      # 5️⃣ Export APK
       - name: Export APK
         run: |
-          ./Godot_v4.2.1-stable_linux.x86_64 --headless --export-release "Android" build.apk
+          ./Godot_v4.2.1-stable_linux.x86_64 --headless \
+            --export-release "Android" $GITHUB_WORKSPACE/build.apk
+          ls -lh $GITHUB_WORKSPACE
 
-      # Upload artifact
+      # 6️⃣ Upload APK artifact
       - name: Upload APK
         uses: actions/upload-artifact@v4
         with:
           name: endless-apk
-          path: build.apk
+          path: $GITHUB_WORKSPACE/build.apk
