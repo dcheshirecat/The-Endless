@@ -9,7 +9,7 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
 
       - name: Download Godot
         run: |
@@ -26,7 +26,8 @@ jobs:
         run: |
           ./Godot_v4.2.1-stable_linux.x86_64 --headless --export-release "Android" build.apk
 
-      - uses: actions/upload-artifact@v3
+      - name: Upload APK
+        uses: actions/upload-artifact@v4
         with:
           name: endless-apk
           path: build.apk
