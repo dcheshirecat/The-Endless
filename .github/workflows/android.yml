@@ -12,30 +12,34 @@ jobs:
       # 1️⃣ Checkout code
       - uses: actions/checkout@v4
 
-      # 2️⃣ Install Java (required by Android SDK)
+      # 2️⃣ Install Java (required for Android SDK)
       - name: Setup Java
         uses: actions/setup-java@v3
         with:
           distribution: temurin
           java-version: 17
 
-      # 3️⃣ Install Android SDK command-line tools
-      - name: Setup Android SDK
-        uses: android-actions/setup-android@v2
-        with:
-          api-level: 33
-          build-tools: 33.0.2
-          cmake: false
-          ndk: false
+      # 3️⃣ Install Android SDK manually
+      - name: Install Android SDK
+        run: |
+          mkdir -p $HOME/android-sdk
+          wget -q https://dl.google.com/android/repository/commandlinetools-linux-9477386_latest.zip -O cmdline-tools.zip
+          unzip -q cmdline-tools.zip -d $HOME/android-sdk
+          mkdir -p $HOME/android-sdk/cmdline-tools/latest
+          mv $HOME/android-sdk/cmdline-tools/* $HOME/android-sdk/cmdline-tools/latest/
+          export ANDROID_HOME=$HOME/android-sdk
+          export PATH=$ANDROID_HOME/cmdline-tools/latest/bin:$PATH
+          yes | sdkmanager --licenses
+          sdkmanager "platform-tools" "platforms;android-33" "build-tools;33.0.2"
 
-      # 4️⃣ Download Godot Linux binary
+      # 4️⃣ Download Godot binary
       - name: Download Godot
         run: |
           wget -4 https://github.com/godotengine/godot/releases/download/4.2.1-stable/Godot_v4.2.1-stable_linux.x86_64.zip -O Godot.zip
           unzip -q Godot.zip
           chmod +x Godot_v4.2.1-stable_linux.x86_64
 
-      # 5️⃣ Download Godot export templates
+      # 5️⃣ Install Godot export templates
       - name: Install Export Templates
         run: |
           wget -4 https://github.com/godotengine/godot/releases/download/4.2.1-stable/Godot_v4.2.1-stable_export_templates.tpz -O templates.tpz
@@ -52,10 +56,10 @@ jobs:
       # 7️⃣ Export APK
       - name: Export APK
         env:
-          ANDROID_HOME: ${{ runner.tools }}/android-sdk
+          ANDROID_HOME: $HOME/android-sdk
+          PATH: $HOME/android-sdk/platform-tools:$PATH
         run: |
-          ./Godot_v4.2.1-stable_linux.x86_64 --headless \
-            --export-release "Android" $GITHUB_WORKSPACE/build.apk
+          ./Godot_v4.2.1-stable_linux.x86_64 --headless --export-release "Android" $GITHUB_WORKSPACE/build.apk
           ls -lh $GITHUB_WORKSPACE
 
       # 8️⃣ Upload APK artifact
