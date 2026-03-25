@@ -15,14 +15,14 @@ jobs:
       # 1️⃣ Checkout repository
       - uses: actions/checkout@v4
 
-      # 2️⃣ Install Java (required by Android SDK)
+      # 2️⃣ Install Java
       - name: Setup Java
         uses: actions/setup-java@v3
         with:
           distribution: temurin
           java-version: 17
 
-      # 3️⃣ Install Android SDK with fixed folder structure
+      # 3️⃣ Install Android SDK correctly
       - name: Install Android SDK
         run: |
           mkdir -p $HOME/android-sdk/cmdline-tools
@@ -31,9 +31,14 @@ jobs:
           mkdir -p $HOME/android-sdk/cmdline-tools/latest
           mv $HOME/android-sdk/cmdline-tools/cmdline-tools/* $HOME/android-sdk/cmdline-tools/latest/
           export ANDROID_HOME=$HOME/android-sdk
-          export PATH=$ANDROID_HOME/cmdline-tools/latest/bin:$PATH
+          export ANDROID_SDK_ROOT=$HOME/android-sdk
+          export PATH=$ANDROID_SDK_ROOT/platform-tools:$ANDROID_SDK_ROOT/cmdline-tools/latest/bin:$PATH
           yes | sdkmanager --licenses
           sdkmanager "platform-tools" "platforms;android-33" "build-tools;33.0.2"
+          # Debug: list installed tools
+          ls -lh $ANDROID_SDK_ROOT
+          ls -lh $ANDROID_SDK_ROOT/platform-tools
+          ls -lh $ANDROID_SDK_ROOT/build-tools
 
       # 4️⃣ Download Godot Linux binary
       - name: Download Godot
@@ -60,11 +65,12 @@ jobs:
       - name: Export APK
         env:
           ANDROID_HOME: $HOME/android-sdk
-          PATH: $HOME/android-sdk/platform-tools:$PATH
+          ANDROID_SDK_ROOT: $HOME/android-sdk
+          PATH: $HOME/android-sdk/platform-tools:$HOME/android-sdk/cmdline-tools/latest/bin:$PATH
         run: |
           ./Godot_v4.2.1-stable_linux.x86_64 --headless \
             --export-release "Android" $GITHUB_WORKSPACE/build.apk
-          # Verify the file exists
+          # Check that APK exists
           if [ ! -f "$GITHUB_WORKSPACE/build.apk" ]; then
             echo "ERROR: APK was not generated!"
             exit 1
