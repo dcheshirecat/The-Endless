@@ -15,21 +15,22 @@ jobs:
       # 1️⃣ Checkout repository
       - uses: actions/checkout@v4
 
-      # 2️⃣ Install Java (required by Android SDK)
+      # 2️⃣ Install Java (required for Android SDK)
       - name: Setup Java
         uses: actions/setup-java@v3
         with:
           distribution: temurin
           java-version: 17
 
-      # 3️⃣ Install Android SDK properly
+      # 3️⃣ Install Android SDK correctly
       - name: Install Android SDK
         run: |
           mkdir -p $HOME/android-sdk/cmdline-tools/latest
           wget -q https://dl.google.com/android/repository/commandlinetools-linux-9477386_latest.zip -O cmdline-tools.zip
           unzip -q cmdline-tools.zip -d $HOME/android-sdk/cmdline-tools/latest
           export ANDROID_HOME=$HOME/android-sdk
-          export PATH=$ANDROID_HOME/cmdline-tools/latest/bin:$PATH
+          # Add sdkmanager to PATH
+          export PATH=$ANDROID_HOME/cmdline-tools/latest/cmdline-tools/bin:$PATH
           yes | sdkmanager --licenses
           sdkmanager "platform-tools" "platforms;android-33" "build-tools;33.0.2"
 
@@ -47,7 +48,7 @@ jobs:
           mkdir -p ~/.local/share/godot/export_templates/4.2.1.stable
           unzip -q templates.tpz -d ~/.local/share/godot/export_templates/4.2.1.stable
 
-      # 6️⃣ Create a debug keystore
+      # 6️⃣ Create debug keystore
       - name: Create Android Debug Keystore
         run: |
           keytool -genkeypair -v -keystore debug.keystore -storepass android \
