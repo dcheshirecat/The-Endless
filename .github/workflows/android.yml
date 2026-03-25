@@ -12,23 +12,24 @@ jobs:
       # 1️⃣ Checkout your code
       - uses: actions/checkout@v4
 
-      # 2️⃣ Install Godot 4.2.1
-      - name: Setup Godot
-        uses: firebelley/setup-godot@v1
-        with:
-          godot-version: 4.2.1
+      # 2️⃣ Download Godot 4.2.1 (Linux 64-bit)
+      - name: Download Godot
+        run: |
+          wget -4 https://github.com/godotengine/godot/releases/download/4.2.1-stable/Godot_v4.2.1-stable_linux.x86_64.zip -O Godot.zip
+          unzip -q Godot.zip
+          chmod +x Godot_v4.2.1-stable_linux.x86_64
 
-      # 3️⃣ Ensure export templates exist (required for Android)
-      - name: Install Godot Export Templates
+      # 3️⃣ Install Godot Export Templates
+      - name: Install Export Templates
         run: |
           mkdir -p ~/.local/share/godot/export_templates/4.2.1.stable
-          wget -q https://downloads.tuxfamily.org/godotengine/4.2.1/Godot_v4.2.1-stable_export_templates.tpz -O templates.tpz
+          wget -4 https://downloads.tuxfamily.org/godotengine/4.2.1/Godot_v4.2.1-stable_export_templates.tpz -O templates.tpz
           unzip -q templates.tpz -d ~/.local/share/godot/export_templates/4.2.1.stable
 
       # 4️⃣ Export APK
       - name: Export Android APK
         run: |
-          godot --headless --export-release "Android" build.apk
+          ./Godot_v4.2.1-stable_linux.x86_64 --headless --export-release "Android" build.apk
 
       # 5️⃣ Upload APK artifact
       - name: Upload APK
