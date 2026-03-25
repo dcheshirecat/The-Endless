@@ -9,24 +9,38 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
 
+      # 1️⃣ Download Godot
       - name: Download Godot
         run: |
-          wget https://downloads.tuxfamily.org/godotengine/4.2.1/Godot_v4.2.1-stable_linux.x86_64.zip
-          unzip Godot_v4.2.1-stable_linux.x86_64.zip
+          wget -4 https://github.com/godotengine/godot/releases/download/4.2.1-stable/Godot_v4.2.1-stable_linux.x86_64.zip -O Godot.zip
+          unzip -q Godot.zip
+          chmod +x Godot_v4.2.1-stable_linux.x86_64
 
-      - name: Export templates
+      # 2️⃣ Download export templates
+      - name: Install Export Templates
         run: |
+          wget -4 https://github.com/godotengine/godot/releases/download/4.2.1-stable/Godot_v4.2.1-stable_export_templates.tpz -O templates.tpz
           mkdir -p ~/.local/share/godot/export_templates/4.2.1.stable
-          wget https://downloads.tuxfamily.org/godotengine/4.2.1/Godot_v4.2.1-stable_export_templates.tpz
-          unzip Godot_v4.2.1-stable_export_templates.tpz -d ~/.local/share/godot/export_templates/4.2.1.stable
+          unzip -q templates.tpz -d ~/.local/share/godot/export_templates/4.2.1.stable
 
+      # 3️⃣ Create Android debug keystore
+      - name: Create Android Debug Keystore
+        run: |
+          keytool -genkeypair -v -keystore debug.keystore -storepass android \
+                  -alias androiddebugkey -keypass android -keyalg RSA -keysize 2048 \
+                  -validity 10000 -dname "CN=Godot, OU=Godot, O=Godot, L=Earth, S=Earth, C=US"
+
+      # 4️⃣ Export APK
       - name: Export APK
         run: |
-          ./Godot_v4.2.1-stable_linux.x86_64 --headless --export-release "Android" build.apk
+          ./Godot_v4.2.1-stable_linux.x86_64 --headless --export-release "Android" $GITHUB_WORKSPACE/build.apk
+          ls -lh $GITHUB_WORKSPACE
 
-      - uses: actions/upload-artifact@v3
+      # 5️⃣ Upload APK
+      - name: Upload APK
+        uses: actions/upload-artifact@v4
         with:
           name: endless-apk
-          path: build.apk
+          path: $GITHUB_WORKSPACE/build.apk
