@@ -1,3 +1,6 @@
+[gd_resource type="Resource" load_steps=2 format=2]
+
 [application]
+
 config/name="The Endless"
-config/main_scene="scenes/altar.tscn"
+run/main_scene="res://Main.tscn"
